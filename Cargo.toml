@@ -1,0 +1,14 @@
+[package]
+name = "webhook-retry-queue"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "A small CLI pattern for acknowledging webhook work only after delivery succeeds."
+
+[lib]
+name = "webhook_retry_queue"
+path = "src/lib.rs"
+
+[[bin]]
+name = "queue-worker"
+path = "src/queue_worker.rs"

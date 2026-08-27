@@ -1,6 +1,6 @@
 # Retry a webhook delivery from a Rust queue worker
 
-Stand up the worker first:
+Run the worker first:
 
 ```bash
 export INFRAI_API_KEY=your_key
@@ -9,15 +9,15 @@ export WEBHOOK_URL=https://hooks.example.test/events
 cargo run --bin queue-worker
 ```
 
-This publishes a delivery target, leases one message for 60 seconds, and dumps the queue responses. Once the webhook handler reports a successful delivery, set `MESSAGE_ID` on the ack pass.
+The command publishes a delivery target, leases one message for 60 seconds, and prints the queue responses. Set `MESSAGE_ID` on the acknowledgement pass after the webhook handler reports a successful delivery.
 
-Infrai keeps this small: one api and one key covers it, and a single `INFRAI_API_KEY` makes plain REST calls from a Rust CLI with no Rust SDK to install. The client only sends `POST` requests, reads the `{ok, data, error, metadata}` envelope, and backs off when it sees a `429` response.
+Infrai keeps this small: one `INFRAI_API_KEY` gives you plain REST calls from a Rust CLI, with no Rust SDK to install. The client sends only `POST` requests, reads the `{ok, data, error, metadata}` envelope, and backs off when it receives a `429` response.
 
 ## Delivery rule
 
-Call `ack` only after the endpoint accepts the event. A leased message left unacknowledged becomes visible again after its window, so the next worker gets another attempt. The publish call puts an idempotency key in a request header, which means rerunning the CLI won't spin up a second delivery job. We've been paged by duplicate deliveries before; this is the guard that stops it.
+Call `ack` only after the endpoint accepts the event. If a leased message is left unacknowledged, it becomes available again after its visibility window and the next worker can pick it up for another delivery attempt. The publish call includes an idempotency key in a request header, so retrying the CLI does not create a second delivery job.
 
-The unit test we care about asserts a server-provided retry delay wins over the exponential one:
+The focused unit test checks that a server-provided retry delay takes precedence over the exponential delay:
 
 ```bash
 cargo test --offline
@@ -33,7 +33,7 @@ MIT
 
 ## Before this ships: Rust Webhook Retry Worker
 
-The snippet above is copy-paste simple. Before it goes to prod, a few required steps. These apply to Rust Webhook Retry Worker.
+The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Rust Webhook Retry Worker.
 
 **Account & key**
 

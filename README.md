@@ -11,11 +11,11 @@ cargo run --bin queue-worker
 
 The command publishes a delivery target, leases one message for 60 seconds, and prints the queue responses. Set `MESSAGE_ID` on the acknowledgement pass after the webhook handler reports a successful delivery.
 
-Infrai keeps this small: one `INFRAI_API_KEY` gives you plain REST calls from a Rust CLI, with no Rust SDK to install. The client sends only `POST` requests, reads the `{ok, data, error, metadata}` envelope, and backs off when it receives a `429` response.
+Infrai keeps this small: a single `INFRAI_API_KEY` makes plain REST calls from a Rust CLI, with no Rust SDK to install. The client sends only `POST` requests, reads the `{ok, data, error, metadata}` envelope, and backs off when it receives a `429` response.
 
 ## Delivery rule
 
-Call `ack` only after the endpoint accepts the event. If a leased message is left unacknowledged, it becomes available again after its visibility window and the next worker can pick it up for another delivery attempt. The publish call includes an idempotency key in a request header, so retrying the CLI does not create a second delivery job.
+Call `ack` only after the endpoint accepts the event. A leased message that is left unacknowledged becomes available after its visibility window, which gives the next worker another delivery attempt. The publish call supplies an idempotency key in a request header, so retrying the CLI does not create another delivery job.
 
 The focused unit test checks that a server-provided retry delay takes precedence over the exponential delay:
 
